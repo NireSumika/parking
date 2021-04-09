@@ -1,4 +1,4 @@
-package cn.edu.dgut.util;
+package cn.edu.dgut.parking.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

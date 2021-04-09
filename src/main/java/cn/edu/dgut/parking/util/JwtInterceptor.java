@@ -1,4 +1,4 @@
-package cn.edu.dgut.util;
+package cn.edu.dgut.parking.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,6 +21,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         log.info("preHandle被调用");
+        log.info(request.getRequestURI());
         String token = request.getHeader("token");
         if(null != token){
             String verifyToken = TokenUtil.verifyToken(token);

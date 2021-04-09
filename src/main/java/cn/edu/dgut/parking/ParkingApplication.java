@@ -1,8 +1,7 @@
 package cn.edu.dgut.parking;
 
-import cn.edu.dgut.util.JwtInterceptor;
+import cn.edu.dgut.parking.util.JwtInterceptor;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -20,6 +19,7 @@ public class ParkingApplication implements WebMvcConfigurer {
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new JwtInterceptor())
 				.addPathPatterns("/**")
-				.excludePathPatterns("/user/userLogin");
+				.excludePathPatterns("/user/userLogin")
+				.excludePathPatterns("/adminUser/login");
 	}
 }

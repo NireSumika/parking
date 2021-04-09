@@ -1,15 +1,25 @@
 package cn.edu.dgut.parking.service;
 
+import cn.edu.dgut.parking.model.Response;
 import cn.edu.dgut.parking.model.User;
 import cn.edu.dgut.parking.model.UserOpenId;
 import cn.edu.dgut.parking.repository.UserRepository;
-import cn.edu.dgut.util.HttpUtil;
-import cn.edu.dgut.util.TokenUtil;
+import cn.edu.dgut.parking.util.HttpUtil;
+import cn.edu.dgut.parking.util.TokenUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Service
@@ -52,16 +62,46 @@ public class UserService {
     public User login(User user){
         UserOpenId userOpenId = getWxOpenid(user);
         if (userOpenId != null){
-            user.setToken(TokenUtil.createToken(userOpenId.getOpenid()));
+
             if(null == userRepository.findByUid(userOpenId.getOpenid())) {
                 user.setUid(userOpenId.getOpenid());
                 user.setSession_key(userOpenId.getSession_key());
-                return userRepository.save(user);
+                userRepository.save(user);
+            }
+            if (null == user.getToken() || null == TokenUtil.verifyToken(user.getToken())){
+                user.setToken(TokenUtil.createToken(userOpenId.getOpenid()));
             }
             User byUid = userRepository.findByUid(userOpenId.getOpenid());
             byUid.setToken(user.getToken());
-            return byUid;
+            if (user.getMember() > 0){
+                LocalDateTime time = LocalDateTime.now();
+                Duration duration = Duration.between(time, user.getMemberTime());
+                if (duration.toMinutes() <= 0) {
+                    user.setMember(0);
+                    userRepository.save(user);
+                }
+            }
+            return byUid.copyUser();
         }
         return null;
+    }
+
+    public User becomeMember(String uid, int memberKind){
+        User user = userRepository.findByUid(uid);
+        Map<Integer, Integer> dic = new HashMap<>();
+        dic.put(1, 30);
+        dic.put(2, 90);
+        dic.put(3, 365);
+        if (user.getMember() > 0){
+            LocalDateTime time = LocalDateTime.now();
+            Duration duration = Duration.between(time, user.getMemberTime());
+            if (duration.toMinutes() > 0){
+                user.setMemberTime(user.getMemberTime().plusDays(dic.get(memberKind)));
+                return userRepository.save(user);
+            }
+        }
+        user.setMember(1);
+        user.setMemberTime(LocalDateTime.now().plusDays(dic.get(memberKind)));
+        return userRepository.save(user);
     }
 }

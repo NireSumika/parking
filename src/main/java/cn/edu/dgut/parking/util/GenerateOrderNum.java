@@ -1,4 +1,4 @@
-package cn.edu.dgut.util;
+package cn.edu.dgut.parking.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

@@ -22,16 +22,17 @@ public class TestController {
     public User userLogin(@RequestBody User user){
         return null;
     }
-    @GetMapping("/")
-    public Test test(){
+//    @GetMapping("/")
+    public static void main(String args[]){
         Test modtest = new Test();
         modtest.setName("bcc");
         modtest.setId(1222);
-        modtest.setInTime(LocalDateTime.now());
-        modtest.setOutTime(LocalDateTime.now().plusSeconds(3659));
+        modtest.setInTime(LocalDateTime.now().plusSeconds(3659));
+        modtest.setOutTime(LocalDateTime.now());
         Duration duration = Duration.between(modtest.getInTime(), modtest.getOutTime());
         modtest.setTotalTime(duration.toMinutes()); //不足一分钟的不计
-        return modtest;
+        System.out.println(duration.toMinutes());
+//        return modtest;
     }
     @PostMapping("/add")
     public boolean add(@RequestBody Test test){

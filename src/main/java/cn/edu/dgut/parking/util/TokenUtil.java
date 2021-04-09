@@ -1,4 +1,4 @@
-package cn.edu.dgut.util;
+package cn.edu.dgut.parking.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -8,9 +8,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class TokenUtil {
     private static final long EXPIRE_TIME = 24 * 3600 * 1000;//默认1天
@@ -23,7 +20,7 @@ public class TokenUtil {
      * @param **password**
      * @return
      */
-    public static String createToken(String userId) {
+    public static String createToken(String openId) {
         try {
             // 设置过期时间
             Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
@@ -36,7 +33,7 @@ public class TokenUtil {
             // 返回token字符串
             return JWT.create()
                     .withHeader(header)
-                    .withClaim("userId", userId)
+                    .withClaim("openId", openId)
                     .withExpiresAt(date)
                     .sign(algorithm);
         } catch (Exception e) {
@@ -45,33 +42,30 @@ public class TokenUtil {
         }
     }
 
-//    /**
-//     * 生成token，自定义过期时间 毫秒
-//     * @param **username**
-//     * @param **password**
-//     * @return
-//     */
-//    public static String createToken(String userId,long expireDate) {
-//        try {
-//            // 设置过期时间
+    /**
+     * 生成token，自定义过期时间 毫秒
+     * @return
+     */
+    public static String createAdminToken(String openId) {
+        try {
+            // 设置过期时间
 //            Date date = new Date(System.currentTimeMillis() + expireDate);
-//            // 私钥和加密算法
-//            Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
-//            // 设置头部信息
-//            Map<String, Object> header = new HashMap<>(2);
-//            header.put("Type", "Jwt");
-//            header.put("alg", "HS256");
-//            // 返回token字符串
-//            return JWT.create()
-//                    .withHeader(header)
-//                    .withClaim("userId", userId)
-//                    .withExpiresAt(date)
-//                    .sign(algorithm);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
+            // 私钥和加密算法
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
+            // 设置头部信息
+            Map<String, Object> header = new HashMap<>(2);
+            header.put("Type", "Jwt");
+            header.put("alg", "HS256");
+            // 返回token字符串
+            return JWT.create()
+                    .withHeader(header)
+                    .withClaim("openId", openId)
+                    .sign(algorithm);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     /**
      * 检验token是否正确
      * @param **token**
@@ -82,7 +76,7 @@ public class TokenUtil {
             Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
             JWTVerifier verifier = JWT.require(algorithm).build();
             DecodedJWT jwt = verifier.verify(token);
-            return jwt.getClaim("userId").asString();
+            return jwt.getClaim("openId").asString();
         } catch (Exception e){
             return null;
         }
