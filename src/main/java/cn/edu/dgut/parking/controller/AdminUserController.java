@@ -4,6 +4,9 @@ import cn.edu.dgut.parking.model.AdminUser;
 import cn.edu.dgut.parking.model.Response;
 import cn.edu.dgut.parking.service.AdminUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +39,15 @@ public class AdminUserController {
         }
     }
 
+    @PostMapping("/update")
+    public Response<?> update(@RequestBody AdminUser adminUser, HttpServletRequest request){
+        if (request.getAttribute("claims").equals("root")){
+            return adminUserService.update(adminUser);
+        }else{
+            return Response.failuer("您没有对应权限",3005);
+        }
+    }
+
     @PostMapping("/removeAdmin")
     public Response<?> removeAdmin(@RequestBody AdminUser adminUser, HttpServletRequest request){
         if (request.getAttribute("claims").equals("root")){
@@ -43,5 +55,11 @@ public class AdminUserController {
         }else{
             return Response.failuer("您没有对应权限",3005);
         }
+    }
+
+    @GetMapping("/getAdminList")
+    public Response<?> getAdminList(){
+//        Pageable pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
+        return adminUserService.getAdminList();
     }
 }

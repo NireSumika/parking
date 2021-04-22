@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,5 +104,9 @@ public class UserService {
         user.setMember(1);
         user.setMemberTime(LocalDateTime.now().plusDays(dic.get(memberKind)));
         return userRepository.save(user);
+    }
+
+    public Response<?> getUserList(){
+        return Response.withData(userRepository.findAll());
     }
 }

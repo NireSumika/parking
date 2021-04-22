@@ -38,13 +38,13 @@ public class OrderService {
     private Global global;
     //生成新订单
     public Long add(Order order){
-        Thread thread = new Thread(() -> {
-            GenerateOrderNum generateOrderNum = new GenerateOrderNum();
-            order.setOrderNum(generateOrderNum.generate());
-        });
+//        Thread thread = new Thread(() -> {
+        GenerateOrderNum generateOrderNum = new GenerateOrderNum();
+        order.setOrderNum(generateOrderNum.generate());
+//        });
         String path = order.getOrderNum() + "-in.jpg";
 //        order.setInPicturePath(ImageTransfer.base64ToImg(order.getInPicturePath(), path));
-        thread.start();
+//        thread.start();
         order.setInTime(LocalDateTime.now());
         Car carByPlate = carService.findCarByPlate(order.getLicensePlate());
         if (null != carByPlate){
@@ -210,7 +210,10 @@ public class OrderService {
                         Duration calculateOverTime = Duration.between(judgeOrder.getOrderSubmissionTime(), outTime);
                         //未超时离场，放行
                         if (calculateOverTime.toSeconds() <= global.outOverTime * 60) {
+
+                            judgeOrder.setParkingTime(Duration.between(judgeOrder.getInTime(), LocalDateTime.now()).toMinutes());
                             judgeOrder.setReleaseFlag(true);
+                            orderRepository.save(judgeOrder);
                         }
                         return Response.withData(judgeOrder);
                     }

@@ -19,5 +19,7 @@ public class Global {
     public float timeReduce;
     @Value("${overTimeFeeCount}")
     public float overTimeFeeCount;
+    @Value("${mode}")
+    public Integer mode;
 
 }

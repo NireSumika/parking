@@ -3,6 +3,7 @@ package cn.edu.dgut.parking.controller;
 import cn.edu.dgut.parking.model.*;
 import cn.edu.dgut.parking.model.Order;
 import cn.edu.dgut.parking.repository.OrderRepository;
+import cn.edu.dgut.parking.repository.ParkingLotRepository;
 import cn.edu.dgut.parking.repository.UserRepository;
 import cn.edu.dgut.parking.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,6 +41,8 @@ public class OrderController {
     private OrderRepository orderRepository;
     @Autowired
     private CarService carService;
+    @Autowired
+    private ParkingLotRepository parkingLotRepository;
 //    @GetMapping("/")
 //    public Order order(@RequestParam("id") Long id){
 //        return orderService.findById(id);
@@ -51,13 +54,65 @@ public class OrderController {
             return Response.failuer("无车辆数据", 4006);
         }
         Order newOrder = new Order();
+        Order judgeOrder = orderRepository.findByLicensePlateAndOrderCompleted(order.getLicensePlate(), false);
+        System.out.println(judgeOrder);
+        if(null != judgeOrder){
+            return Response.failuer("存在未完成订单", 4011);
+        }
         newOrder.setInGate(order.getInGate());
         newOrder.setParkingLotName(order.getParkingLotName());
         newOrder.setLicensePlate(order.getLicensePlate());
         newOrder.setInPassWay(order.getInPassWay());
+        ParkingLot parkingLot = parkingLotRepository.findByParkingLotName(order.getParkingLotName());
+        if (null != parkingLot) {
+            if (parkingLot.getRemaining() <= 0){
+                return Response.failuer("无剩余车位", 4009);
+            }
+            parkingLot.setRemaining(parkingLot.getRemaining() - 1);
+        }
+        parkingLotRepository.save(parkingLot);
 //        newOrder.setInPicturePath(order.getInPicturePath());
         return Response.withData(orderService.add(newOrder));
     }
+
+    @PostMapping("/add_member_order")
+    public Response<?> add_member_order(@RequestBody Order order) {
+        if (null == order.getLicensePlate() || null == order.getParkingLotName()){
+            return Response.failuer("无车辆数据", 4006);
+        }
+        User tempuser = carService.findCarByPlate(order.getLicensePlate()).getUser();
+        if (null == tempuser || tempuser.getMember() == 0){
+            return Response.failuer("非会员不可进入", 3008);
+        }
+        Order newOrder = new Order();
+        newOrder.setInGate(order.getInGate());
+        newOrder.setParkingLotName(order.getParkingLotName());
+        newOrder.setLicensePlate(order.getLicensePlate());
+        newOrder.setInPassWay(order.getInPassWay());
+        ParkingLot parkingLot = parkingLotRepository.findByParkingLotName(order.getParkingLotName());
+        if (null != parkingLot) {
+            if (parkingLot.getRemaining() <= 0){
+                return Response.failuer("无剩余车位", 4009);
+            }
+            parkingLot.setRemaining(parkingLot.getRemaining() - 1);
+        }
+        parkingLotRepository.save(parkingLot);
+//        newOrder.setInPicturePath(order.getInPicturePath());
+        return Response.withData(orderService.add(newOrder));
+    }
+
+    //离场(重要)(识别端)
+    @PostMapping("/update_memberOutGateInfo")
+    public Response<?> update_memberOutGateInfo(@RequestBody Order order) throws JsonProcessingException {
+        Order original = orderRepository.findByLicensePlateAndOrderCompleted(order.getLicensePlate(), false);
+        if (null != original){
+            original.setReleaseFlag(true);
+            orderRepository.save(original);
+            return Response.withData(original);
+        }
+        return Response.failuer("无订单数据", 4004);
+    }
+
     @GetMapping("/get_order_by_uid")
     public Response<Set> get_order_by_uid(HttpServletRequest request){
         try {
@@ -78,10 +133,10 @@ public class OrderController {
         }
         return new Response<Set>().setSuccess(false);
     }
-    @GetMapping("/getAllPage")
-    public Response<Page<Order>> getAllPage(HttpServletRequest request, @RequestParam("page") Integer currentPage){
+    @GetMapping("/getAll")
+    public Response<?> getAllPage(HttpServletRequest request){//, @RequestParam("page") Integer currentPage){
         return Response.withData(orderRepository.findAll(
-                PageRequest.of(currentPage - 1, 2, Sort.by(Sort.Direction.DESC, "id"))));
+                PageRequest.of(0, 100000, Sort.by(Sort.Direction.DESC, "id"))));
     }
     @GetMapping("/getUserAllPage")
     public Response<Page<Order>> getUserAllPage(HttpServletRequest request, @RequestParam("page") Integer currentPage){
@@ -90,13 +145,29 @@ public class OrderController {
         Pageable pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
         return Response.withData(orderRepository.findAllByUser(user, pageable));
     }
+    @GetMapping("/getParkingLotAllPage")
+    public Response<Page<Order>> getParkingLotAllPage(HttpServletRequest request, @RequestParam("page") Integer currentPage, @RequestParam("plate") String parkingLot){
+//        String uid = request.getAttribute("claims").toString();
+//        User user = userService.findByUid(uid);
+//        Car car = carService.findCarByPlate(plate);
+        Pageable pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
+        return Response.withData(orderRepository.findAllByParkingLotName(parkingLot, pageable));
+    }
     @GetMapping("/getCarAllPage")
-    public Response<Page<Order>> getCarAllPage(HttpServletRequest request, @RequestParam("page") Integer currentPage, @RequestParam("plate") String plate){
-        String uid = request.getAttribute("claims").toString();
-        User user = userService.findByUid(uid);
-        Car car = carService.findCarByPlate(plate);
-        Pageable pageable = PageRequest.of(currentPage - 1, 2, Sort.by(Sort.Direction.DESC, "id"));
-        return Response.withData(orderRepository.findAllByCar(car, pageable));
+    public Response<Page<Order>> getCarAllPage(@RequestParam("page") Integer currentPage, @RequestParam("plate") String plate){
+//        String uid = request.getAttribute("claims").toString();
+//        User user = userService.findByUid(uid);
+//        Car car = carService.findCarByPlate(plate);
+        Pageable pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
+        return Response.withData(orderRepository.findAllByLicensePlate(plate, pageable));
+    }
+    @GetMapping("/getCompletedAllPage")
+    public Response<Page<Order>> getCompletedAllPage(HttpServletRequest request, @RequestParam("page") Integer currentPage, @RequestParam("plate") Boolean completed){
+//        String uid = request.getAttribute("claims").toString();
+//        User user = userService.findByUid(uid);
+//        Car car = carService.findCarByPlate(plate);
+        Pageable pageable = PageRequest.of(currentPage - 1, 15, Sort.by(Sort.Direction.DESC, "id"));
+        return Response.withData(orderRepository.findAllByOrderCompleted(completed, pageable));
     }
 //    获取订单最新信息(小程序端)
     @PostMapping("/fresh_order")
@@ -160,12 +231,11 @@ public class OrderController {
         //TODO 校验
         Order newOrder = new Order();
         newOrder.setLicensePlate(order.getLicensePlate());
-        newOrder.setOutGate(order.getOutGate());
         return orderService.outGate(newOrder);
     }
 
     //放行后更新数据
-    @PostMapping("/updata_release")
+    @PostMapping("/update_release")
     public Response<?> updata_release(@RequestBody Order order){
         Order order_original = orderService.findByOrderNum(order.getOrderNum());
         order_original.setOutTime(LocalDateTime.now());
@@ -174,10 +244,14 @@ public class OrderController {
         order_original.setOutPicturePath(order.getOutPicturePath());
         order_original.setReleaseFlag(true);
         order_original.setOrderCompleted(true);
+        ParkingLot parkingLot = parkingLotRepository.findByParkingLotName(order_original.getParkingLotName());
+        if (null != parkingLot) {
+            parkingLot.setRemaining(parkingLot.getRemaining() + 1);
+        }
+        parkingLotRepository.save(parkingLot);
         String path = order.getOrderNum() + "-out.jpg";
 //        order_original.setOutPicturePath(ImageTransfer.base64ToImg(order.getOutPicturePath(), path));
         orderService.update(order_original);
         return Response.success();
     }
-
 }

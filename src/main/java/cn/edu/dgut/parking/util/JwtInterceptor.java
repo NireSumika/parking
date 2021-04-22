@@ -35,7 +35,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         try{
             response.setHeader("Content-type", "text/html;charset=UTF-8");
             out = response.getWriter();
-            out.append("{\"success\":false,\"code\":\"notLogin\",\"msg\":\"您已经被拦截了，请重新登录\"}");
+            out.append("{\"success\":false,\"code\":\"notLogin\",\"message\":\"请登录\"}");
 //            response.sendError(10001, "用户未登录");
         }catch(IOException e){
             e.printStackTrace();

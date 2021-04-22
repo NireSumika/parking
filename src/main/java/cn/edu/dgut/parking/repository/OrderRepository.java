@@ -17,5 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Order findByLicensePlateAndOrderCompleted(String lincePlate, Boolean orderCompleted);
     Page<Order> findAllByUser(User user, Pageable pageable);
     Page<Order> findAllByCar(Car car, Pageable pageable);
+    Page<Order> findAllByLicensePlate(String plate, Pageable pageable);
+    Page<Order> findAllByParkingLotName(String parkingLot, Pageable pageable);
     Page<Order> findAllByOrderCompleted(Boolean flag, Pageable pageable);
 }

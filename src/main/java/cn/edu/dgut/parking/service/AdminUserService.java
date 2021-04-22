@@ -5,6 +5,8 @@ import cn.edu.dgut.parking.model.Response;
 import cn.edu.dgut.parking.repository.AdminUserRepository;
 import cn.edu.dgut.parking.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,5 +56,12 @@ public class AdminUserService {
 
     public Response<?> getAdminInfo(String claims) {
         return Response.withData(adminUserRepository.findByAdminId(claims));
+    }
+    public Response<?> update(AdminUser adminUser){
+        return Response.withData(adminUserRepository.save(adminUser));
+    }
+
+    public Response<?> getAdminList(){
+        return Response.withData(adminUserRepository.findAll());
     }
 }

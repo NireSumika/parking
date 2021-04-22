@@ -8,11 +8,13 @@ import cn.edu.dgut.parking.repository.CarRepository;
 import cn.edu.dgut.parking.repository.OrderRepository;
 import cn.edu.dgut.parking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -30,6 +32,7 @@ public class CarService {
     private OrderService orderService;
 
     public boolean add(String openId, Car car){
+        car.setUser(userService.findByUid(openId));
         Set<Order> orders = findOrdersByPlate(car.getLincesePlate());
         if (null != orders){
             User user = userService.findByUid(openId);
@@ -68,8 +71,17 @@ public class CarService {
         }
         return Response.failuer("fail", 5002);
     }
+
+    public Response<?> getCarList(){
+        return Response.withData(carRepository.findAll());
+    }
+
     public Car findCarByPlate(String plate){
         return carRepository.findByLincesePlate(plate);
+    }
+
+    public Response<?> getCarByPlate(String plate){
+        return Response.withData(carRepository.findByLincesePlate(plate));
     }
     private Set<Order> findOrdersByPlate(String plate){
         return orderRepository.findByLicensePlate(plate);

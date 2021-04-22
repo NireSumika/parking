@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 @Entity
-@JsonIgnoreProperties(value = {"user"})
+@JsonIgnoreProperties(value = {"orders", "user"})
 public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
