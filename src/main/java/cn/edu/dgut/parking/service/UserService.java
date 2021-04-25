@@ -63,7 +63,6 @@ public class UserService {
     public User login(User user){
         UserOpenId userOpenId = getWxOpenid(user);
         if (userOpenId != null){
-
             if(null == userRepository.findByUid(userOpenId.getOpenid())) {
                 user.setUid(userOpenId.getOpenid());
                 user.setSession_key(userOpenId.getSession_key());

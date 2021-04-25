@@ -59,16 +59,31 @@ public class CarService {
         return new HashSet<>();
     }
     public Response<?> delCar(String openId, Car delcar){
-        Set<Car> cars = userService.findByUid(openId).getCars();
-        if (null != cars){
-//            User user = userService.findByUid(openId);
-            for (Car car : cars) {
-                if (car.getLincesePlate().equals(delcar.getLincesePlate())){
-                    carRepository.delete(car);
-                    return Response.success();
+        Car originCar = carRepository.findByLincesePlate(delcar.getLincesePlate());
+        if (originCar.getLincesePlate() != null){
+            Set<Car> user_cars = originCar.getUser().getCars();
+            for (Car carItem:user_cars){
+                if (carItem.getLincesePlate().equals(originCar.getLincesePlate())){
+                    user_cars.remove(carItem);
                 }
             }
+            originCar.getUser().setCars(user_cars);
+            carRepository.save(originCar);
+            for (Order orderItem: originCar.getOrders()){
+                orderItem.setCar(null);
+                orderRepository.save(orderItem);
+            }
         }
+//        Set<Car> cars = userService.findByUid(openId).getCars();
+//        if (null != cars){
+////            User user = userService.findByUid(openId);
+//            for (Car car : cars) {
+//                if (car.getLincesePlate().equals(delcar.getLincesePlate())){
+//                    carRepository.delete(car);
+//                    return Response.success();
+//                }
+//            }
+//        }
         return Response.failuer("fail", 5002);
     }
 

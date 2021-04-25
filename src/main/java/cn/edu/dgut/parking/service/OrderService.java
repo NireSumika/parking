@@ -220,15 +220,17 @@ public class OrderService {
                     //未支付
                     else {
                         User user = judgeOrder.getUser();
-                        if (user.getMember() > 0){
-                            LocalDateTime time = LocalDateTime.now();
-                            Duration duration = Duration.between(time, user.getMemberTime());
-                            if (duration.toMinutes() > 0){
-                                judgeOrder.setReleaseFlag(true);
-                            }else {
-                                //会员已过期
-                                user.setMember(0);
-                                userRepository.save(user);
+                        if(null != user) {
+                            if (user.getMember() > 0) {
+                                LocalDateTime time = LocalDateTime.now();
+                                Duration duration = Duration.between(time, user.getMemberTime());
+                                if (duration.toMinutes() > 0) {
+                                    judgeOrder.setReleaseFlag(true);
+                                } else {
+                                    //会员已过期
+                                    user.setMember(0);
+                                    userRepository.save(user);
+                                }
                             }
                         }
                         return Response.withData(judgeOrder);
